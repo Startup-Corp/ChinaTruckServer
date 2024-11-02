@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Корзина покупок</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f7f7f7;
+      }
+
+      .container {
+        background-color: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+        max-width: 700px;
+        width: 100%;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 10px;
+        font-weight: bold;
+      }
+
+      p {
+        font-size: 16px;
+        color: #666;
+        margin-bottom: 20px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+
+      th,
+      td {
+        padding: 8px;
+        border: 1px solid #ddd;
+        text-align: left;
+      }
+
+      th {
+        background-color: #f4f4f4;
+        font-weight: bold;
+      }
+
+      td {
+        word-wrap: break-word;
+        white-space: normal;
+      }
+
+      th:nth-child(1),
+      td:nth-child(1) {
+        width: 30%;
+      }
+
+      th:nth-child(2),
+      td:nth-child(2) {
+        width: 20%;
+      }
+
+      th:nth-child(3),
+      td:nth-child(3) {
+        width: 15%;
+      }
+
+      th:nth-child(4),
+      td:nth-child(4) {
+        width: 15%;
+      }
+
+      th:nth-child(5),
+      td:nth-child(5) {
+        width: 20%;
+        /* Колонка для кнопки удаления */
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+        box-sizing: border-box;
+      }
+
+      button {
+        background-color: #6366f1;
+        color: white;
+        padding: 12px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      button:hover {
+        background-color: #4f46e5;
+      }
+
+      .cancel-btn {
+        background-color: #f87171;
+      }
+
+      .cancel-btn:hover {
+        background-color: #ef4444;
+      }
+
+      .privacy-text {
+        margin-top: 15px;
+        font-size: 12px;
+        color: #999;
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 20px;
+        }
+
+        h1 {
+          font-size: 20px;
+        }
+
+        p {
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>Онлайн быстрее</h1>
+      <p>Оформить заказ еще никогда не было так просто!</p>
+
+      <!-- Таблица товаров -->
+      <table>
+        <thead>
+          <tr>
+            <th>Название товара</th>
+            <th>Артикул</th>
+            <th>Количество</th>
+            <th>Цена</th>
+            <th>Удалить</th>
+          </tr>
+        </thead>
+        <tbody id="cartItemsContainer">
+          <!-- Здесь будут динамически добавляться товары -->
+        </tbody>
+        <tfoot>
+          <td colspan="3" style="font-weight: bold">Общая сумма:</td>
+          <td id="total-price" style="font-weight: bold">0 руб</td>
+        </tfoot>
+      </table>
+
+      <div class="form-group">
+        <input type="text" id="phone" placeholder="Номер телефона" />
+      </div>
+
+      <button id="order-btn">Оформить заказ</button>
+      <button id="cancel-btn" class="cancel-btn">Отменить заказ</button>
+    </div>
+
+    <script>
+      // Функция для отображения товаров из корзины
+      function displayCart() {
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+        let cartItemsContainer = document.getElementById("cartItemsContainer");
+        cartItemsContainer.innerHTML = ""; // Очищаем перед перерисовкой
+        let totalPrice = 0;
+
+        cart.forEach((item, index) => {
+          let itemTotal = item.price * item.quantity;
+          totalPrice += itemTotal;
+
+          // Добавляем строку товара в таблицу
+          cartItemsContainer.innerHTML += `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.id}</td>
+                    <td>${item.quantity}</td>
+                    <td>${itemTotal} руб</td>
+                    <td><button onclick="removeItem(${index})">Удалить</button></td>
+                </tr>
+            `;
+        });
+
+        // Обновляем общую сумму
+        document.getElementById("total-price").textContent =
+          totalPrice + " руб";
+      }
+
+      // Функция для удаления товара
+      function removeItem(index) {
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+        cart.splice(index, 1); // Удаляем товар по индексу
+        localStorage.setItem("cart", JSON.stringify(cart)); // Сохраняем изменения
+        displayCart(); // Перерисовываем корзину
+      }
+
+      // Вызываем функцию при загрузке страницы
+      window.onload = displayCart;
+
+      // Обработчик для кнопки "Оформить заказ"
+      document
+        .getElementById("order-btn")
+        .addEventListener("click", function () {
+          var phone = document.getElementById("phone").value;
+          let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+          if (!phone) {
+            alert("Пожалуйста, введите ваш номер телефона.");
+            return;
+          }
+
+          if (cart.length === 0) {
+            alert("Корзина пуста!");
+            return;
+          }
+
+          // Формируем данные для отправки
+          const orderData = {
+            phone: phone,
+            cart: cart,
+          };
+
+          console.log(orderData);
+
+          // Отправляем данные на сервер
+          fetch("http://localhost:5000/submit_order", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(orderData),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              alert("Заказ оформлен. Мы свяжемся с вами по телефону: " + phone);
+              localStorage.removeItem("cart"); // Очищаем корзину
+              displayCart(); // Перерисовываем корзину
+            })
+            .catch((error) => {
+              console.error("Ошибка:", error);
+              alert(
+                "Ошибка при оформлении заказа. Пожалуйста, попробуйте позже."
+              );
+            });
+        });
+
+      // Обработчик для кнопки "Отменить заказ"
+      document
+        .getElementById("cancel-btn")
+        .addEventListener("click", function () {
+          if (confirm("Вы уверены, что хотите отменить заказ?")) {
+            localStorage.removeItem("cart"); // Очищаем корзину
+            displayCart(); // Перерисовываем корзину
+            alert("Заказ отменен.");
+          }
+        });
+    </script>
+  </body>
+</html>

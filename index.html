@@ -1,0 +1,469 @@
+<div class="container-search" style="background-color: #314837">
+  <h1 style="font-size: 50px; color: white; margin-bottom: 40px">
+    Наш Каталог
+  </h1>
+  <div class="group">
+    <svg class="icon" aria-hidden="true" viewBox="0 0 24 24">
+      <g>
+        <path
+          d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"
+        ></path>
+      </g>
+    </svg>
+    <input placeholder="Поиск" type="search" class="search-input" />
+  </div>
+
+  <p id="no-results" style="color: white; display: none">
+    По вашему запросу ничего не нашлось
+  </p>
+  <div class="products"></div>
+</div>
+
+<style>
+  .container-search {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+
+    margin-bottom: 0px;
+  }
+
+  .group {
+    display: flex;
+    line-height: 28px;
+    align-items: center;
+    position: relative;
+    width: 40%;
+    max-width: 400px;
+    margin-bottom: 20px;
+  }
+
+  .search-input {
+    width: 100%;
+    height: 40px;
+    line-height: 28px;
+    padding: 0 1rem;
+    padding-left: 2.5rem;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    outline: none;
+    background-color: #f3f3f4;
+    color: #0d0c22;
+    transition: 0.3s ease;
+  }
+
+  .search-input::placeholder {
+    color: #9e9ea7;
+  }
+
+  .search-input:focus,
+  .search-input:hover {
+    outline: none;
+    border-color: rgba(234, 76, 137, 0.4);
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgb(234 76 137 / 10%);
+  }
+
+  .icon {
+    position: absolute;
+    left: 1rem;
+    fill: #9e9ea7;
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .products {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .product-card {
+    background-color: #16171d;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    padding: 16px;
+    width: 240px;
+    height: auto;
+    /* Убираем фиксированную высоту */
+    color: #bdbecb;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s;
+    box-sizing: border-box;
+  }
+
+  .product-image {
+    width: 100%;
+    height: 150px;
+    /* Фиксированная высота изображения */
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+
+  .product-title {
+    font-size: 18px;
+    margin-bottom: 8px;
+    text-align: left;
+    height: auto;
+    /* Убираем ограничение высоты */
+    overflow: hidden;
+  }
+
+  .product-footer {
+    display: flex;
+    flex-direction: column;
+    /* Меняем направление на колонку */
+    justify-content: flex-end;
+    align-items: flex-start;
+    margin-top: auto;
+    width: 100%;
+  }
+
+  .product-description,
+  .product-count {
+    margin: 4px 0;
+    font-size: 14px;
+    overflow: hidden;
+    text-align: left;
+  }
+
+  .product-price-and-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .product-price {
+    font-size: 20px;
+    /* Увеличиваем шрифт цены */
+    color: #ff6347;
+    font-weight: bold;
+    /* Делаем цену жирной */
+  }
+
+  /* Центрируем кнопки и поле ввода */
+  .quantity-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Центрируем по горизонтали */
+    margin-bottom: 10px;
+  }
+
+  /* Поле ввода количества */
+  .quantity-input {
+    width: 60px;
+    height: 40px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 0 10px;
+    font-size: 16px;
+    color: #0d0c22;
+    background-color: #f3f3f4;
+    -moz-appearance: textfield;
+    /* Убираем стрелки в Firefox */
+    pointer-events: none;
+    /* Запрещаем ввод вручную */
+  }
+
+  .quantity-input::-webkit-outer-spin-button,
+  .quantity-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    /* Убираем стрелки в Chrome/Safari */
+    margin: 0;
+  }
+
+  /* Кнопки "-" и "+" */
+  .quantity-button {
+    background-color: #ff6347;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 18px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .quantity-button:hover {
+    background-color: #3c3d4a;
+  }
+
+  /* Кнопка "Купить" */
+  .buy-button {
+    background-color: #ff6347;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 12px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .buy-button:hover {
+    background-color: #3c3d4a;
+  }
+
+  /* Адаптивные стили */
+  @media (max-width: 1024px) {
+    .group {
+      width: 60%;
+    }
+
+    .product-card {
+      width: calc(33.33% - 16px);
+      /* 3 карточки в строке на средних экранах */
+    }
+  }
+
+  @media (max-width: 768px) {
+    .group {
+      width: 80%;
+    }
+
+    .product-card {
+      width: calc(50% - 16px);
+      /* 2 карточки в строке на маленьких экранах */
+    }
+  }
+
+  @media (max-width: 480px) {
+    .group {
+      width: 90%;
+    }
+
+    .product-card {
+      width: 100%;
+      /* По одной карточке в строке на самых маленьких экранах */
+    }
+  }
+</style>
+
+<script>
+  // Корзина хранится в localStorage
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+  // Функция для добавления товара в корзину и сохранения состояния в localStorage
+  function addToCart(productId, productName, productPrice, productQuantity) {
+    const existingProductIndex = cart.findIndex(
+      (item) => item.id === productId
+    );
+
+    if (existingProductIndex !== -1) {
+      cart[existingProductIndex].quantity = productQuantity;
+    } else {
+      cart.push({
+        id: productId,
+        name: productName,
+        price: productPrice,
+        quantity: productQuantity,
+      });
+    }
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }
+
+  // Функция для удаления товара из корзины и обновления localStorage
+  function removeFromCart(productId) {
+    cart = cart.filter((item) => item.id !== productId);
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }
+
+  // Массив для хранения продуктов
+  let products = [];
+
+  // Функция для получения данных с сервера
+  async function fetchProducts() {
+    try {
+      const response = await fetch("http://localhost:5000/read_excel");
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+
+      const text = await response.text();
+      console.log("Response Text:", text);
+
+      // Проверяем, что ответ содержит валидный JSON
+      products = JSON.parse(text);
+      if (!Array.isArray(products))
+        throw new Error("Received data is not an array.");
+
+      displayProducts(products.slice(0, 5)); // Отображаем только первые 5 товаров при загрузке
+    } catch (error) {
+      console.error("Ошибка получения данных:", error);
+    }
+  }
+
+  // Функция для отображения товаров и восстановления состояния кнопок и количества из localStorage
+  function displayProducts(productsToDisplay) {
+    const productsContainer = document.querySelector(".products");
+    productsContainer.innerHTML = "";
+
+    productsToDisplay.forEach((product) => {
+      const productCard = document.createElement("div");
+      productCard.classList.add("product-card");
+
+      const isAvailable = product.Количество > 0;
+      const priceText =
+        product.Сумма >= 0 ? `${product.Сумма} ₽` : "Цена уточняется";
+
+      productCard.innerHTML = `
+      <h3 class="product-title">${product.Номенклатура || "Нет названия"}</h3>
+      <div class="product-footer">
+        <p class="product-description">Артикул: ${
+          product.Артикул || "Нет артикула"
+        }</p>
+        <p class="product-count">Есть в наличии: ${
+          isAvailable ? `${product.Количество}` : "Нет в наличии"
+        }</p>
+        
+        <div class="product-price-and-button">
+          <p class="product-price">${
+            isAvailable ? `Цена: ${priceText}` : "Нет товара"
+          }</p>
+          <button class="buy-button" data-id="${product.Артикул}" data-name="${
+        product.Номенклатура
+      }" data-price="${product.Сумма}" ${
+        isAvailable ? "" : "disabled"
+      }>Купить</button>
+        </div>
+
+        <div class="quantity-wrapper" style="display: none;">
+          <button class="quantity-button minus">-</button>
+          <input type="number" class="quantity-input" min="1" value="1" max="${
+            product.Количество
+          }" readonly>
+          <button class="quantity-button plus">+</button>
+        </div>
+      </div>
+    `;
+
+      productsContainer.appendChild(productCard);
+
+      const buyButton = productCard.querySelector(".buy-button");
+      const quantityWrapper = productCard.querySelector(".quantity-wrapper");
+      const quantityInput = productCard.querySelector(".quantity-input");
+
+      buyButton.addEventListener("click", () => {
+        if (buyButton.textContent === "В корзине") {
+          window.location.href = "/ShunliTruck/payment.html";
+          return;
+        }
+
+        const productId = buyButton.getAttribute("data-id");
+        const productName = buyButton.getAttribute("data-name");
+        const productPrice = parseFloat(buyButton.getAttribute("data-price"));
+        const selectedQuantity = parseInt(quantityInput.value, 10);
+
+        addToCart(productId, productName, productPrice, selectedQuantity);
+
+        buyButton.textContent = "В корзине";
+        buyButton.style.backgroundColor = "#3c3d4a";
+        quantityWrapper.style.display = "flex";
+      });
+
+      const minusButton = productCard.querySelector(".minus");
+      const plusButton = productCard.querySelector(".plus");
+
+      minusButton.addEventListener("click", () => {
+        let currentValue = parseInt(quantityInput.value, 10);
+        if (currentValue > 1) {
+          quantityInput.value = currentValue - 1;
+          addToCart(
+            buyButton.getAttribute("data-id"),
+            buyButton.getAttribute("data-name"),
+            parseFloat(buyButton.getAttribute("data-price")),
+            currentValue - 1
+          );
+        } else {
+          quantityWrapper.style.display = "none";
+          buyButton.textContent = "Купить";
+          buyButton.style.backgroundColor = "#ff6347";
+          buyButton.disabled = false;
+          removeFromCart(buyButton.getAttribute("data-id"));
+        }
+      });
+
+      plusButton.addEventListener("click", () => {
+        let currentValue = parseInt(quantityInput.value, 10);
+        if (currentValue < product.Количество) {
+          quantityInput.value = currentValue + 1;
+          addToCart(
+            buyButton.getAttribute("data-id"),
+            buyButton.getAttribute("data-name"),
+            parseFloat(buyButton.getAttribute("data-price")),
+            currentValue + 1
+          );
+        }
+      });
+    });
+
+    // Восстанавливаем состояние кнопок и количества после полной отрисовки продуктов
+    loadButtonState();
+  }
+
+  // Функция для загрузки состояния кнопок и количества товаров из localStorage
+  function loadButtonState() {
+    cart.forEach((item) => {
+      // Ищем карточку товара по ID в корзине
+      const buyButton = document.querySelector(
+        `.buy-button[data-id="${item.id}"]`
+      );
+
+      // Если кнопка не найдена, пропускаем текущий элемент
+      if (!buyButton) return;
+
+      const productCard = buyButton.closest(".product-card");
+      if (productCard) {
+        const quantityWrapper = productCard.querySelector(".quantity-wrapper");
+        const quantityInput = quantityWrapper.querySelector(".quantity-input");
+
+        // Обновляем состояние кнопки и количества
+        buyButton.textContent = "В корзине";
+        buyButton.style.backgroundColor = "#3c3d4a";
+        buyButton.disabled = false;
+        quantityWrapper.style.display = "flex";
+        quantityInput.value = item.quantity;
+      }
+    });
+  }
+
+  // Поиск по товарам в реальном времени
+  document
+    .querySelector(".search-input")
+    .addEventListener("input", function () {
+      const searchTerm = this.value.toLowerCase();
+
+      if (searchTerm === "") {
+        displayProducts(products.slice(0, 5)); // Если строка поиска пустая, отображаем первые 5 товаров
+      } else {
+        const filteredProducts = products.filter(
+          (product) =>
+            (product.Номенклатура &&
+              product.Номенклатура.toLowerCase().includes(searchTerm)) ||
+            (product.Артикул &&
+              product.Артикул.toLowerCase().includes(searchTerm))
+        );
+        displayProducts(filteredProducts); // Отображаем только отфильтрованные товары
+      }
+    });
+
+  // Загрузка состояния кнопок при загрузке страницы
+  document.addEventListener("DOMContentLoaded", () => {
+    fetchProducts(); // Загружаем продукты и сразу отображаем их
+  });
+</script>
