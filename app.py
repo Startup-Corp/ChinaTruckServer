@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 import pandas as pd
-import json
+import json 
 from flask_cors import CORS
 import smtplib
 from email.mime.text import MIMEText
@@ -12,14 +12,17 @@ CORS(app)
 
 @app.route('/read_excel', methods=['GET'])
 def read_excel():
-    file_path = 'products.xlsx'
+    file_path = 'files/products.xlsx'
 
     try:
         # Чтение Excel файла с пропуском строк и заданными заголовками
+        # columns = ['number','Артикул', 'Товары (работы, услуги)', 'Производитель', 'Марка а/м  (Совместимость)', 'Цена', 'Примечание']
         columns = ['Артикул', 'Номенклатура', 'Количество', 'Сумма']
         df = pd.read_excel(file_path, skiprows=6, names=columns, engine='openpyxl')
     except Exception as e:
-        return jsonify({'error': f'Error reading Excel file: {str(e)}'}), 400
+        err_message = {'error': f'Error reading Excel file: {str(e)}'}
+        print(err_message)
+        return jsonify(err_message), 400
 
     # Проверка наличия необходимых колонок
     required_columns = ['Артикул', 'Номенклатура', 'Количество', 'Сумма']
