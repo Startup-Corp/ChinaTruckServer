@@ -5,10 +5,21 @@ from flask_cors import CORS
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-
+import nltk
+from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize
 
 app = Flask(__name__)
-CORS(app) 
+CORS(app)
+nltk.download('punkt') # Загрузка необходимых ресурсов для nltk
+nltk.download('punkt_tab')
+stemmer = PorterStemmer() # Инициализация стеммера
+
+def stem_words(text):
+    if pd.isna(text):
+        return ""
+    words = word_tokenize(text.lower())
+    return ' '.join([stemmer.stem(word) for word in words])
 
 @app.route('/read_excel', methods=['GET'])
 def read_excel():
@@ -36,6 +47,9 @@ def read_excel():
     df['Производитель'] = df['Производитель'].fillna('')  # Заменяем NaN в "Примечание" на под заказ
     df['Цена'] = df['Цена'].fillna(0)  # Заменяем NaN в "Сумма" на 0
     df['Примечание'] = df['Примечание'].fillna('под заказ')  # Заменяем NaN в "Примечание" на под заказ
+
+    # Добавление колонки "stemed" с преобразованными названиями
+    # df['stemed'] = df['name'].apply(stem_words)
 
     # Извлечение данных
     data = df[columns].to_dict(orient='records')

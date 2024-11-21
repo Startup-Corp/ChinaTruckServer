@@ -18,7 +18,7 @@
   </p>
   <div class="products"></div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/compromise@14.9.0/builds/compromise.min.js"></script>
 <style>
   .container-search {
     display: flex;
@@ -463,6 +463,7 @@
   }
 
   // Поиск по товарам в реальном времени
+  const nlp = window.compromise;
   document
     .querySelector(".search-input")
     .addEventListener("input", function () {
@@ -472,12 +473,12 @@
         displayProducts(products.slice(0, 5)); // Если строка поиска пустая, отображаем первые 5 товаров
         document.getElementById("no-results").style.display = "none"; // Скрываем текст при пустом поиске
       } else {
-        const searchWords = searchTerm.split(" "); // Разбиваем строку поиска на слова
+        const searchWords = nlp(searchTerm).out('array'); // Разбиваем строку поиска на слова
 
         const filteredProducts = products.filter((product) => {
-          const name = product.name
+          const name = nlp(product.name
             ? product.name.toLowerCase()
-            : "";
+            : "");
           const code = product.articul
             ? String(product.articul).toLowerCase()
             : "";
