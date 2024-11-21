@@ -12,33 +12,33 @@ CORS(app)
 
 @app.route('/read_excel', methods=['GET'])
 def read_excel():
-    file_path = 'files/products.xlsx'
-
+    file_path = 'files/products2.xlsx'
+    columns = ['number', 'articul', 'name', 'Производитель', 'model', 'Цена', 'Примечание']
+    # columns = ['Артикул', 'Номенклатура', 'Количество', 'Сумма']
+    
     try:
         # Чтение Excel файла с пропуском строк и заданными заголовками
-        # columns = ['number','Артикул', 'Товары (работы, услуги)', 'Производитель', 'Марка а/м  (Совместимость)', 'Цена', 'Примечание']
-        columns = ['Артикул', 'Номенклатура', 'Количество', 'Сумма']
-        df = pd.read_excel(file_path, skiprows=6, names=columns, engine='openpyxl')
+        df = pd.read_excel(file_path, skiprows=1, names=columns, engine='openpyxl')
     except Exception as e:
         err_message = {'error': f'Error reading Excel file: {str(e)}'}
         print(err_message)
         return jsonify(err_message), 400
 
     # Проверка наличия необходимых колонок
-    required_columns = ['Артикул', 'Номенклатура', 'Количество', 'Сумма']
-    if not all(column in df.columns for column in required_columns):
+    if not all(column in df.columns for column in columns):
         return jsonify({'error': 'Missing required columns in Excel file'}), 400
 
     # Замена NaN на None (будет сериализован как null в JSON)
     df = df.where(pd.notnull(df), None)
 
     # Замена NaN на 0 для всех необходимых колонок
-    df['Артикул'] = df['Артикул'].fillna('')  # Заменяем NaN в "Артикул" на пустую строку
-    df['Количество'] = df['Количество'].fillna(0)  # Заменяем NaN в "Количество" на 0
-    df['Сумма'] = df['Сумма'].fillna(0)  # Заменяем NaN в "Сумма" на 0
+    df['articul'] = df['articul'].fillna('')  # Заменяем NaN в "Артикул" на пустую строку
+    df['Производитель'] = df['Производитель'].fillna('')  # Заменяем NaN в "Примечание" на под заказ
+    df['Цена'] = df['Цена'].fillna(0)  # Заменяем NaN в "Сумма" на 0
+    df['Примечание'] = df['Примечание'].fillna('под заказ')  # Заменяем NaN в "Примечание" на под заказ
 
     # Извлечение данных
-    data = df[required_columns].to_dict(orient='records')
+    data = df[columns].to_dict(orient='records')
 
     # Возврат данных с отключением экранирования не-ASCII символов
     response = app.response_class(

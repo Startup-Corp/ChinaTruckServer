@@ -276,12 +276,14 @@
       });
     }
     localStorage.setItem("cart", JSON.stringify(cart));
+    updateCartCount();
   }
 
   // Функция для удаления товара из корзины и обновления localStorage
   function removeFromCart(productId) {
     cart = cart.filter((item) => item.id !== productId);
     localStorage.setItem("cart", JSON.stringify(cart));
+    updateCartCount();
   }
 
   // Массив для хранения продуктов
@@ -308,6 +310,25 @@
     }
   }
 
+  function updateCartCount() {
+    const cartElement = document.getElementById("n-add16a4a-e991-4fd9-ae56-70e63b675187");
+    if (cartElement) {
+      // Подсчитываем общее количество товаров в корзине
+      const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+      if (totalCount > 0) {
+        // Устанавливаем атрибут data-count для отображения числа
+        cartElement.setAttribute("data-count", totalCount);
+        // Добавляем класс для отображения кружка
+        cartElement.classList.add("cart-with-count");
+      } else {
+        // Убираем атрибут и класс, если корзина пуста
+        cartElement.removeAttribute("data-count");
+        cartElement.classList.remove("cart-with-count");
+      }
+    }
+  }
+
   // Функция для отображения товаров и восстановления состояния кнопок и количества из localStorage
   function displayProducts(productsToDisplay) {
     const productsContainer = document.querySelector(".products");
@@ -317,27 +338,27 @@
       const productCard = document.createElement("div");
       productCard.classList.add("product-card");
 
-      const isAvailable = product.Количество > 0;
+      const isAvailable = product.Примечание == 'в наличии';
       const priceText =
-        product.Сумма >= 0 ? `${product.Сумма} ₽` : "Цена уточняется";
+        product.Цена >= 0 ? `${product.Цена} ₽` : "Цена уточняется";
 
       productCard.innerHTML = `
-      <h3 class="product-title">${product.Номенклатура || "Нет названия"}</h3>
+      <h3 class="product-title">${product.name || "Нет названия"}</h3>
       <div class="product-footer">
         <p class="product-description">Артикул: ${
-          product.Артикул || "Нет артикула"
+          product.articul || "Нет артикула"
         }</p>
-        <p class="product-count">Есть в наличии: ${
-          isAvailable ? `${product.Количество}` : "Нет в наличии"
+        <p class="product-count">${
+          isAvailable ? 'В наличии' : 'Под заказ'
         }</p>
         
         <div class="product-price-and-button">
           <p class="product-price">${
             isAvailable ? `Цена: ${priceText}` : "Нет товара"
           }</p>
-          <button class="buy-button" data-id="${product.Артикул}" data-name="${
-        product.Номенклатура
-      }" data-price="${product.Сумма}" ${
+          <button class="buy-button" data-id="${product.articul}" data-name="${
+        product.name
+      }" data-price="${product.Цена}" ${
         isAvailable ? "" : "disabled"
       }>Купить</button>
         </div>
@@ -345,7 +366,7 @@
         <div class="quantity-wrapper" style="display: none;">
           <button class="quantity-button minus">-</button>
           <input type="number" class="quantity-input" min="1" value="1" max="${
-            product.Количество
+            product.Цена
           }" readonly>
           <button class="quantity-button plus">+</button>
         </div>
@@ -360,7 +381,7 @@
 
       buyButton.addEventListener("click", () => {
         if (buyButton.textContent === "В корзине") {
-          window.location.href = "/ShunliTruck/payment.html";
+          window.location.href = "/payment";
           return;
         }
 
@@ -400,20 +421,19 @@
 
       plusButton.addEventListener("click", () => {
         let currentValue = parseInt(quantityInput.value, 10);
-        if (currentValue < product.Количество) {
-          quantityInput.value = currentValue + 1;
-          addToCart(
-            buyButton.getAttribute("data-id"),
-            buyButton.getAttribute("data-name"),
-            parseFloat(buyButton.getAttribute("data-price")),
-            currentValue + 1
-          );
-        }
+        quantityInput.value = currentValue + 1;
+        addToCart(
+          buyButton.getAttribute("data-id"),
+          buyButton.getAttribute("data-name"),
+          parseFloat(buyButton.getAttribute("data-price")),
+          currentValue + 1
+        );
       });
     });
 
     // Восстанавливаем состояние кнопок и количества после полной отрисовки продуктов
     loadButtonState();
+    updateCartCount();
   }
 
   // Функция для загрузки состояния кнопок и количества товаров из localStorage
@@ -446,18 +466,34 @@
   document
     .querySelector(".search-input")
     .addEventListener("input", function () {
-      const searchTerm = this.value.toLowerCase();
+      const searchTerm = this.value.toLowerCase().trim();
 
       if (searchTerm === "") {
         displayProducts(products.slice(0, 5)); // Если строка поиска пустая, отображаем первые 5 товаров
+        document.getElementById("no-results").style.display = "none"; // Скрываем текст при пустом поиске
       } else {
-        const filteredProducts = products.filter(
-          (product) =>
-            (product.Номенклатура &&
-              product.Номенклатура.toLowerCase().includes(searchTerm)) ||
-            (product.Артикул &&
-              product.Артикул.toLowerCase().includes(searchTerm))
-        );
+        const searchWords = searchTerm.split(" "); // Разбиваем строку поиска на слова
+
+        const filteredProducts = products.filter((product) => {
+          const name = product.name
+            ? product.name.toLowerCase()
+            : "";
+          const code = product.articul
+            ? String(product.articul).toLowerCase()
+            : "";
+
+          // Проверяем, что каждое слово из поиска содержится либо в названии, либо в артикуле
+          return searchWords.every(
+            (word) => name.includes(word) || code.includes(word)
+          );
+        });
+
+        if (filteredProducts.length === 0) {
+          document.getElementById("no-results").style.display = "block"; // Показываем текст, если ничего не найдено
+        } else {
+          document.getElementById("no-results").style.display = "none"; // Скрываем текст, если найдены результаты
+        }
+
         displayProducts(filteredProducts); // Отображаем только отфильтрованные товары
       }
     });
@@ -465,5 +501,6 @@
   // Загрузка состояния кнопок при загрузке страницы
   document.addEventListener("DOMContentLoaded", () => {
     fetchProducts(); // Загружаем продукты и сразу отображаем их
+    updateCartIndicator();
   });
 </script>
