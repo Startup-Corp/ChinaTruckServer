@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 import pandas as pd
 import json 
 from flask_cors import CORS
@@ -20,6 +20,10 @@ def stem_words(text):
         return ""
     words = word_tokenize(text.lower())
     return ' '.join([stemmer.stem(word) for word in words])
+
+@app.route('/files/images/<path:filename>')
+def serve_image(filename):
+    return send_from_directory('files/images', filename)
 
 @app.route('/read_excel', methods=['GET'])
 def read_excel():
