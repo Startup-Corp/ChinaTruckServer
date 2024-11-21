@@ -384,100 +384,123 @@
       const productCard = document.createElement("div");
       productCard.classList.add("product-card");
 
-      const isAvailable = product.Примечание == 'в наличии';
+      const isAvailable = product.Примечание == "в наличии";
       const priceText =
         product.Цена >= 0 ? `${product.Цена} ₽` : "Цена уточняется";
 
-        // Запрос на получение изображения
-        let imageUrl = "3.JPG"; // Путь к изображению-заглушке
+      // Запрос на получение изображения
+      let imageUrl = "3.JPG"; // Путь к изображению-заглушке
+
+      async function getImageUrl() {
+        const url = `/files/images/${product.articul}.jpg`;
+
         try {
-            const response =  await(`/files/images/${product.articul}.jpg`);
-            if (response.ok) {
-                imageUrl = `/files/images/${product.articul}.jpg`;
-            }
+          const response = await fetch(url);
+          if (response.ok) {
+            return url;
+          }
         } catch (error) {
-            console.warn(`Изображение для артикула ${product.articul} не найдено. Используется заглушка.`);
+          console.warn(
+            `Изображение для артикула ${product.articul} не найдено по адресу ${url}.`
+          );
         }
+
+        return imageUrl; // Используем заглушку, если изображение не найдено
+      }
+
+      getImageUrl().then((url) => {
+        imageUrl = url;
 
         productCard.innerHTML = `
-        <div class="product-image-wrapper">
-          <img src="${imageUrl}" alt="${product.name || "Нет названия"}" class="product-image">
+      <div class="product-image-wrapper">
+        <img src="${imageUrl}" alt="${
+          product.name || "Нет названия"
+        }" class="product-image">
+      </div>
+      <h3 class="product-title">${product.name || "Нет названия"}</h3>
+      <div class="product-footer">
+        <p class="product-description">Артикул: ${
+          product.articul || "Нет артикула"
+        }</p>
+        <p class="product-count">${isAvailable ? "В наличии" : "Под заказ"}</p>
+
+        <div class="product-price-and-button">
+          <p class="product-price">${
+            isAvailable ? `Цена: ${priceText}` : "Нет товара"
+          }</p>
+          <button class="buy-button" data-id="${product.articul}" data-name="${
+          product.name
+        }" data-price="${product.Цена}" ${isAvailable ? "" : "disabled"}>
+            Купить
+          </button>
         </div>
-        <h3 class="product-title">${product.name || "Нет названия"}</h3>
-        <div class="product-footer">
-          <p class="product-description">Артикул: ${product.articul || "Нет артикула"}</p>
-          <p class="product-count">${isAvailable ? 'В наличии' : 'Под заказ'}</p>
-          
-          <div class="product-price-and-button">
-            <p class="product-price">${isAvailable ? `Цена: ${priceText}` : "Нет товара"}</p>
-            <button class="buy-button" data-id="${product.articul}" data-name="${product.name}" data-price="${product.Цена}" ${isAvailable ? "" : "disabled"}>
-              Купить
-            </button>
-          </div>
 
-          <div class="quantity-wrapper" style="display: none;">
-            <button class="quantity-button minus">-</button>
-            <input type="number" class="quantity-input" min="1" value="1" max="${product.Цена}" readonly>
-            <button class="quantity-button plus">+</button>
-          </div>
+        <div class="quantity-wrapper" style="display: none;">
+          <button class="quantity-button minus">-</button>
+          <input type="number" class="quantity-input" min="1" value="1" max="${
+            product.Цена
+          }" readonly>
+          <button class="quantity-button plus">+</button>
         </div>
-      `;
+      </div>
+    `;
 
-      productsContainer.appendChild(productCard);
+        productsContainer.appendChild(productCard);
 
-      const buyButton = productCard.querySelector(".buy-button");
-      const quantityWrapper = productCard.querySelector(".quantity-wrapper");
-      const quantityInput = productCard.querySelector(".quantity-input");
+        const buyButton = productCard.querySelector(".buy-button");
+        const quantityWrapper = productCard.querySelector(".quantity-wrapper");
+        const quantityInput = productCard.querySelector(".quantity-input");
 
-      buyButton.addEventListener("click", () => {
-        if (buyButton.textContent === "В корзине") {
-          window.location.href = "/payment";
-          return;
-        }
+        buyButton.addEventListener("click", () => {
+          if (buyButton.textContent === "В корзине") {
+            window.location.href = "/payment";
+            return;
+          }
 
-        const productId = buyButton.getAttribute("data-id");
-        const productName = buyButton.getAttribute("data-name");
-        const productPrice = parseFloat(buyButton.getAttribute("data-price"));
-        const selectedQuantity = parseInt(quantityInput.value, 10);
+          const productId = buyButton.getAttribute("data-id");
+          const productName = buyButton.getAttribute("data-name");
+          const productPrice = parseFloat(buyButton.getAttribute("data-price"));
+          const selectedQuantity = parseInt(quantityInput.value, 10);
 
-        addToCart(productId, productName, productPrice, selectedQuantity);
+          addToCart(productId, productName, productPrice, selectedQuantity);
 
-        buyButton.textContent = "В корзине";
-        buyButton.style.backgroundColor = "#3c3d4a";
-        quantityWrapper.style.display = "flex";
-      });
+          buyButton.textContent = "В корзине";
+          buyButton.style.backgroundColor = "#3c3d4a";
+          quantityWrapper.style.display = "flex";
+        });
 
-      const minusButton = productCard.querySelector(".minus");
-      const plusButton = productCard.querySelector(".plus");
+        const minusButton = productCard.querySelector(".minus");
+        const plusButton = productCard.querySelector(".plus");
 
-      minusButton.addEventListener("click", () => {
-        let currentValue = parseInt(quantityInput.value, 10);
-        if (currentValue > 1) {
-          quantityInput.value = currentValue - 1;
+        minusButton.addEventListener("click", () => {
+          let currentValue = parseInt(quantityInput.value, 10);
+          if (currentValue > 1) {
+            quantityInput.value = currentValue - 1;
+            addToCart(
+              buyButton.getAttribute("data-id"),
+              buyButton.getAttribute("data-name"),
+              parseFloat(buyButton.getAttribute("data-price")),
+              currentValue - 1
+            );
+          } else {
+            quantityWrapper.style.display = "none";
+            buyButton.textContent = "Купить";
+            buyButton.style.backgroundColor = "#ff6347";
+            buyButton.disabled = false;
+            removeFromCart(buyButton.getAttribute("data-id"));
+          }
+        });
+
+        plusButton.addEventListener("click", () => {
+          let currentValue = parseInt(quantityInput.value, 10);
+          quantityInput.value = currentValue + 1;
           addToCart(
             buyButton.getAttribute("data-id"),
             buyButton.getAttribute("data-name"),
             parseFloat(buyButton.getAttribute("data-price")),
-            currentValue - 1
+            currentValue + 1
           );
-        } else {
-          quantityWrapper.style.display = "none";
-          buyButton.textContent = "Купить";
-          buyButton.style.backgroundColor = "#ff6347";
-          buyButton.disabled = false;
-          removeFromCart(buyButton.getAttribute("data-id"));
-        }
-      });
-
-      plusButton.addEventListener("click", () => {
-        let currentValue = parseInt(quantityInput.value, 10);
-        quantityInput.value = currentValue + 1;
-        addToCart(
-          buyButton.getAttribute("data-id"),
-          buyButton.getAttribute("data-name"),
-          parseFloat(buyButton.getAttribute("data-price")),
-          currentValue + 1
-        );
+        });
       });
     });
 
