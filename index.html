@@ -89,7 +89,7 @@
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     padding: 16px;
     width: 260px;
-    height: 400px; /* Фиксированная высота карточки */
+    height: auto; /* Фиксированная высота карточки */
     color: #bdbecb;
     display: flex;
     flex-direction: column;
@@ -104,7 +104,7 @@
     font-size: 18px;
     margin-bottom: 8px;
     text-align: left; /* Центрируем заголовок */
-    height: 44px; /* Фиксированная высота для заголовка */
+    height: fit-content; /* Фиксированная высота для заголовка */
   }
   
   .product-description {
@@ -389,10 +389,10 @@
         product.Цена >= 0 ? `${product.Цена} ₽` : "Цена уточняется";
 
       // Запрос на получение изображения
-      let imageUrl = "3.JPG"; // Путь к изображению-заглушке
+      let imageUrl = "files/images/404.jpg"; // Путь к изображению-заглушке
 
       async function getImageUrl() {
-        const url = `/files/images/${product.articul}.jpg`;
+        const url = `http://localhost:5000/files/images/${product.articul}.jpg`;
 
         try {
           const response = await fetch(url);
