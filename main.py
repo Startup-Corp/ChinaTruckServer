@@ -6,12 +6,24 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
+import zipfile
+import shutil
 # import nltk
 # from nltk.stem import PorterStemmer
 # from nltk.tokenize import word_tokenize
 
 app = Flask(__name__)
 CORS(app)
+UPLOAD_FOLDER = 'files/uploads'
+EXTRACT_FOLDER = 'files/extracted'
+EXCEL_FOLDER = 'files'
+IMAGES_FOLDER = 'files/images'
+# Создаем необходимые директории, если они не существуют
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(EXTRACT_FOLDER, exist_ok=True)
+os.makedirs(EXCEL_FOLDER, exist_ok=True)
+os.makedirs(IMAGES_FOLDER, exist_ok=True)
+
 # nltk.download('punkt') # Загрузка необходимых ресурсов для nltk
 # nltk.download('punkt_tab')
 # stemmer = PorterStemmer() # Инициализация стеммера
@@ -30,19 +42,30 @@ def serve_image(filename):
     matching_files = [f for f in files if filename in f]
 
     if not matching_files:
-        return send_from_directory(directory_path, "404.jpg")
+        return send_from_directory("files", "404.jpg")
 
     return send_from_directory(directory_path, matching_files[0])
 
 @app.route('/read_excel', methods=['GET'])
 def read_excel():
-    file_path = 'files/products.xlsx'
+    file_path_xlsx = 'files/products.xlsx'
+    file_path_xls = 'files/products.xls'
     columns = ['number', 'articul', 'name', 'Производитель', 'model', 'Цена', 'Примечание']
     # columns = ['Артикул', 'Номенклатура', 'Количество', 'Сумма']
     
+        # Определяем, какой файл существует и какой движок использовать
+    if os.path.exists(file_path_xlsx):
+        file_path = file_path_xlsx
+        engine = 'openpyxl'
+    elif os.path.exists(file_path_xls):
+        file_path = file_path_xls
+        engine = 'xlrd'
+    else:
+        return jsonify({'error': 'Excel file not found'}), 404
+    
     try:
         # Чтение Excel файла с пропуском строк и заданными заголовками
-        df = pd.read_excel(file_path, skiprows=1, names=columns, engine='openpyxl')
+        df = pd.read_excel(file_path, skiprows=1, names=columns, engine=engine)
     except Exception as e:
         err_message = {'error': f'Error reading Excel file: {str(e)}'}
         print(err_message)
@@ -74,7 +97,6 @@ def read_excel():
         mimetype='application/json'
     )
     return response
-
 
 # Функция для отправки письма
 def send_email(sender_email, sender_password, receiver_email, subject, body):
@@ -146,6 +168,63 @@ def submit_order():
         print(f"Ошибка при обработке заказа: {e}")
         return jsonify({"message": "Ошибка при отправке заказа"}), 500
 
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    if file and file.filename.endswith('.zip'):
+        zip_path = os.path.join(UPLOAD_FOLDER, file.filename)
+        file.save(zip_path)
+
+        # Разархивируем ZIP-файл
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(EXTRACT_FOLDER)
+
+        # Найдем Excel-файл в разархивированной директории
+        excel_file = None
+        images_folder_path = None
+        for root, dirs, files in os.walk(EXTRACT_FOLDER):
+            for filename in files:
+                if filename.endswith('.xlsx') or filename.endswith('.xls'):
+                    excel_file = os.path.join(root, filename)
+                if 'images' in dirs:
+                    images_folder_path = os.path.join(root, 'images')
+
+        if excel_file:
+            # Переименуем Excel-файл и переместим его в нужную директорию
+            new_excel_path = os.path.join(EXCEL_FOLDER, 'products.xlsx')
+            shutil.move(excel_file, new_excel_path)
+
+            # Переместим картинки из папки images в files/images
+            if images_folder_path:
+                for image_file in os.listdir(images_folder_path):
+                    shutil.move(os.path.join(images_folder_path, image_file), IMAGES_FOLDER)
+
+            # Удалим временные файлы и директории
+            shutil.rmtree(EXTRACT_FOLDER)
+            os.remove(zip_path)
+
+            return jsonify({'message': 'File uploaded and processed successfully'}), 200
+        else:
+            return jsonify({'error': 'No Excel file found in the ZIP archive'}), 400
+    else:
+        return jsonify({'error': 'Invalid file format. Please upload a ZIP file.'}), 400
+
+@app.route('/upload2_images', methods=['POST'])
+def delete_images():
+    try:
+        for image_file in os.listdir(IMAGES_FOLDER):
+            os.remove(os.path.join(IMAGES_FOLDER, image_file))
+        return jsonify({'message': 'Images deleted successfully'}), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to delete images: {str(e)}'}), 500
 
 if __name__ == '__main__':
     app.run(port=5000)
