@@ -8,12 +8,15 @@ from email.mime.multipart import MIMEMultipart
 import os
 import zipfile
 import shutil
+from dotenv import dotenv_values
 # import nltk
 # from nltk.stem import PorterStemmer
 # from nltk.tokenize import word_tokenize
 
 app = Flask(__name__)
 CORS(app)
+config = dotenv_values(".env")
+
 UPLOAD_FOLDER = 'files/uploads'
 EXTRACT_FOLDER = 'files/extracted'
 EXCEL_FOLDER = 'files'
@@ -109,7 +112,7 @@ def send_email(sender_email, sender_password, receiver_email, subject, body):
 
         print("Подключение к SMTP серверу...")
 
-        with smtplib.SMTP("smtp.mail.ru", 587) as server:
+        with smtplib.SMTP("smtp.yandex.ru", 587) as server:
             server.starttls()
             print("Успешно установлено TLS соединение.")
             
@@ -152,9 +155,9 @@ def submit_order():
         print("Попытка отправить письмо с данными заказа...")
 
         # Отправляем письмо
-        sender_email = "kulzhenya11@mail.ru"
-        sender_password = "h5BEUUvAcENd6GujJMzn"
-        receiver_email = "kulzhenya11@mail.ru"
+        sender_email = config["EMAIL"]
+        sender_password = config["PASSWORD"]
+        receiver_email = config["EMAIL"]
         subject = "Новый заказ"
         
         # Отправка письма
@@ -205,6 +208,9 @@ def upload_file():
             # Переместим картинки из папки images в files/images
             if images_folder_path:
                 for image_file in os.listdir(images_folder_path):
+                    dest_path = os.path.join(IMAGES_FOLDER, image_file)
+                    if os.path.exists(dest_path):
+                        os.remove(dest_path)  # Удаляем существующий файл
                     shutil.move(os.path.join(images_folder_path, image_file), IMAGES_FOLDER)
 
             # Удалим временные файлы и директории
@@ -227,4 +233,4 @@ def delete_images():
         return jsonify({'error': f'Failed to delete images: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    app.run(port=5000)
+    app.run(host='127.0.0.1', port=8000)

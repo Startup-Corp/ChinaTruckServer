@@ -21,7 +21,7 @@ class ZipUploaderApp:
             self.send_zip_to_server(file_path)
 
     def send_zip_to_server(self, file_path):
-        url = 'http://shunliservertruck.ddns.net:5000/upload'  # Замените на URL вашего сервера
+        url = 'https://shunliservertruck.ddns.net:5000/upload'  # Замените на URL вашего сервера
         files = {'file': open(file_path, 'rb')}
 
         try:
