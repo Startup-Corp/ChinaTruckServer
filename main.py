@@ -5,6 +5,7 @@ from flask_cors import CORS
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.header import Header
 import os
 import zipfile
 import shutil
@@ -132,10 +133,8 @@ def send_email(sender_email, sender_password, receiver_email, subject, body):
         message["To"] = receiver_email
         message["Subject"] = subject
         message.attach(MIMEText(body, "plain"))
-
         print("Подключение к SMTP серверу...")
-
-        with smtplib.SMTP("smtp.yandex.ru", 587) as server:
+        with smtplib.SMTP("smtp.mail.ru", 587) as server:
             server.starttls()
             print("Успешно установлено TLS соединение.")
             
@@ -148,7 +147,6 @@ def send_email(sender_email, sender_password, receiver_email, subject, body):
             print(f"Отправка письма на {receiver_email}...")
             server.sendmail(sender_email, receiver_email, message.as_string())
             print("Письмо успешно отправлено.")
-
     except Exception as e:
         print(f"Ошибка при отправке письма: {e}")
 
