@@ -9,6 +9,8 @@ import os
 import zipfile
 import shutil
 from dotenv import dotenv_values
+from math import ceil
+
 # import nltk
 # from nltk.stem import PorterStemmer
 # from nltk.tokenize import word_tokenize
@@ -54,9 +56,8 @@ def read_excel():
     file_path_xlsx = 'files/products.xlsx'
     file_path_xls = 'files/products.xls'
     columns = ['number', 'articul', 'name', 'Производитель', 'model', 'Цена', 'Примечание']
-    # columns = ['Артикул', 'Номенклатура', 'Количество', 'Сумма']
-    
-        # Определяем, какой файл существует и какой движок использовать
+
+    # Определяем, какой файл существует и какой движок использовать
     if os.path.exists(file_path_xlsx):
         file_path = file_path_xlsx
         engine = 'openpyxl'
@@ -65,7 +66,7 @@ def read_excel():
         engine = 'xlrd'
     else:
         return jsonify({'error': 'Excel file not found'}), 404
-    
+
     try:
         # Чтение Excel файла с пропуском строк и заданными заголовками
         df = pd.read_excel(file_path, skiprows=1, names=columns, engine=engine)
@@ -87,19 +88,41 @@ def read_excel():
     df['Цена'] = df['Цена'].fillna(0)  # Заменяем NaN в "Сумма" на 0
     df['Примечание'] = df['Примечание'].fillna('под заказ')  # Заменяем NaN в "Примечание" на под заказ
 
-    # Добавление колонки "stemed" с преобразованными названиями
-    # df['stemed'] = df['name'].apply(stem_words)
+    # Замена символа '/' на ', ' в артикуле
+    df['articul'] = df['articul'].apply(lambda x: x.replace('/', ', ') if isinstance(x, str) else x)
+    df['search_fields'] = df[['name', 'articul', 'Производитель', 'model']].apply(lambda x: ' '.join(x.dropna().astype(str)), axis=1)
+
+    # Получение параметров пагинации и поиска из запроса
+    page = int(request.args.get('page', 1))
+    limit = int(request.args.get('limit', 18))
+    search_term = request.args.get('search', '').lower()
+
+    # Фильтрация данных по поисковому запросу
+    if search_term:
+        df = df[df['search_fields'].str.contains(search_term, case=False)]
+
+    # Разбивка данных на страницы
+    start = (page - 1) * limit
+    end = start + limit
+    paginated_data = df[start:end]
 
     # Извлечение данных
-    data = df[columns].to_dict(orient='records')
+    data = paginated_data[columns].to_dict(orient='records')
+
+    # Вычисление общего количества страниц
+    total_pages = ceil(len(df) / limit)
 
     # Возврат данных с отключением экранирования не-ASCII символов
     response = app.response_class(
-        response=json.dumps(data, ensure_ascii=False),
+        response=json.dumps({
+            'data': data,
+            'totalPages': total_pages
+        }, ensure_ascii=False),
         status=200,
         mimetype='application/json'
     )
     return response
+
 
 # Функция для отправки письма
 def send_email(sender_email, sender_password, receiver_email, subject, body):
