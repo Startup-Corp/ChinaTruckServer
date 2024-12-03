@@ -95,7 +95,7 @@ def read_excel():
 
     # Получение параметров пагинации и поиска из запроса
     page = int(request.args.get('page', 1))
-    limit = int(request.args.get('limit', 18))
+    limit = int(request.args.get('limit', 15))
     search_term = request.args.get('search', '').lower()
 
     # Фильтрация данных по поисковому запросу
