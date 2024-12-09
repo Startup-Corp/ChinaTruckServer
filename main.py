@@ -71,7 +71,7 @@ def read_excel():
 
     try:
         # Чтение Excel файла с пропуском строк и заданными заголовками
-        df = pd.read_excel(file_path, index_col=None, engine=engine, dtype='object')
+        df = pd.read_excel(file_path, index_col=None, engine=engine)
     except Exception as e:
         err_message = {'error': f'Error reading Excel file: {str(e)}'}
         print(err_message)
