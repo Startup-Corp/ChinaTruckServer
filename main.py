@@ -50,7 +50,7 @@ def serve_image(filename):
     matching_files = [f for f in files if filename in f]
 
     if not matching_files:
-        return send_from_directory("files", "404.jpg")
+        return send_from_directory(directory_path, "404.jpg")
 
     return send_from_directory(directory_path, matching_files[0])
 
