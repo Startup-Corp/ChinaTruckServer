@@ -226,13 +226,12 @@ def upload_file():
             new_excel_path = os.path.join(EXCEL_FOLDER, 'products.xlsx')
             shutil.move(excel_file, new_excel_path)
 
-            # Переместим картинки из папки images в files/images
+            # Переместим картинки из папки images в files/images, только если они отсутствуют
             if images_folder_path:
                 for image_file in os.listdir(images_folder_path):
                     dest_path = os.path.join(IMAGES_FOLDER, image_file)
-                    if os.path.exists(dest_path):
-                        os.remove(dest_path)  # Удаляем существующий файл
-                    shutil.move(os.path.join(images_folder_path, image_file), IMAGES_FOLDER)
+                    if not os.path.exists(dest_path):  # Проверяем, существует ли файл
+                        shutil.move(os.path.join(images_folder_path, image_file), IMAGES_FOLDER)
 
             # Удалим временные файлы и директории
             shutil.rmtree(EXTRACT_FOLDER)
