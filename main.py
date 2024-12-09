@@ -11,6 +11,7 @@ import zipfile
 import shutil
 from dotenv import dotenv_values
 from math import ceil
+import re
 
 # import nltk
 # from nltk.stem import PorterStemmer
@@ -40,6 +41,7 @@ os.makedirs(IMAGES_FOLDER, exist_ok=True)
 #     words = word_tokenize(text.lower())
 #     return ' '.join([stemmer.stem(word) for word in words])
 
+
 @app.route('/files/images/<filename>', methods=['GET'])
 def serve_image(filename):
     directory_path = 'files/images'
@@ -56,8 +58,7 @@ def serve_image(filename):
 def read_excel():
     file_path_xlsx = 'files/products.xlsx'
     file_path_xls = 'files/products.xls'
-    columns = ['number', 'articul', 'name', 'Производитель', 'model', 'Цена', 'Примечание']
-
+    columns = ['numbers', 'articul', 'name', 'Производитель', 'model', 'Цена', 'Примечание']
     # Определяем, какой файл существует и какой движок использовать
     if os.path.exists(file_path_xlsx):
         file_path = file_path_xlsx
@@ -70,18 +71,24 @@ def read_excel():
 
     try:
         # Чтение Excel файла с пропуском строк и заданными заголовками
-        df = pd.read_excel(file_path, skiprows=1, names=columns, engine=engine)
+        df = pd.read_excel(file_path, index_col=None, engine=engine, dtype='object')
     except Exception as e:
         err_message = {'error': f'Error reading Excel file: {str(e)}'}
         print(err_message)
         return jsonify(err_message), 400
 
+    df.drop(columns=[df.columns[-1]], inplace=True)
+    df.columns = columns
     # Проверка наличия необходимых колонок
-    if not all(column in df.columns for column in columns):
-        return jsonify({'error': 'Missing required columns in Excel file'}), 400
+    # if not all(column in df.columns for column in columns):
+    #     return jsonify({'error': 'Missing required columns in Excel file'}), 400
 
+# df.to_excel("test.xlsx")
     # Замена NaN на None (будет сериализован как null в JSON)
     df = df.where(pd.notnull(df), None)
+
+    # print(df['number'])
+    print(df['articul'])
 
     # Замена NaN на 0 для всех необходимых колонок
     df['articul'] = df['articul'].fillna('')  # Заменяем NaN в "Артикул" на пустую строку
@@ -98,9 +105,12 @@ def read_excel():
     limit = int(request.args.get('limit', 15))
     search_term = request.args.get('search', '').lower()
 
+    # Экранирование специальных символов в строке поиска
+    search_term = re.escape(search_term)
+
     # Фильтрация данных по поисковому запросу
     if search_term:
-        df = df[df['search_fields'].str.contains(search_term, case=False)]
+        df = df[df['search_fields'].str.contains(search_term, case=False, regex=True)]
 
     # Разбивка данных на страницы
     start = (page - 1) * limit
@@ -112,6 +122,7 @@ def read_excel():
 
     # Вычисление общего количества страниц
     total_pages = ceil(len(df) / limit)
+
 
     # Возврат данных с отключением экранирования не-ASCII символов
     response = app.response_class(
@@ -243,14 +254,14 @@ def upload_file():
     else:
         return jsonify({'error': 'Invalid file format. Please upload a ZIP file.'}), 400
 
-@app.route('/upload2_images', methods=['POST'])
-def delete_images():
-    try:
-        for image_file in os.listdir(IMAGES_FOLDER):
-            os.remove(os.path.join(IMAGES_FOLDER, image_file))
-        return jsonify({'message': 'Images deleted successfully'}), 200
-    except Exception as e:
-        return jsonify({'error': f'Failed to delete images: {str(e)}'}), 500
+# @app.route('/upload2_images', methods=['POST'])
+# def delete_images():
+#     try:
+#         for image_file in os.listdir(IMAGES_FOLDER):
+#             os.remove(os.path.join(IMAGES_FOLDER, image_file))
+#         return jsonify({'message': 'Images deleted successfully'}), 200
+#     except Exception as e:
+#         return jsonify({'error': f'Failed to delete images: {str(e)}'}), 500
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8000)
