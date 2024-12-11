@@ -226,6 +226,8 @@ def upload_file():
         excel_file = None
         images_folder_path = None
         for root, dirs, files in os.walk(EXTRACT_FOLDER):
+            print("root =", root, "dirs =", dirs, "files =", files)
+
             if "images" in root:
                 images_folder_path = root
             else:
