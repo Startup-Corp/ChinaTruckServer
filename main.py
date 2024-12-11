@@ -226,31 +226,34 @@ def upload_file():
         excel_file = None
         images_folder_path = None
         for root, dirs, files in os.walk(EXTRACT_FOLDER):
-            for filename in files:
-                if filename.endswith('.xlsx') or filename.endswith('.xls'):
-                    excel_file = os.path.join(root, filename)
-                if 'images' in dirs:
-                    images_folder_path = os.path.join(root, 'images')
+            if "images" in root:
+                images_folder_path = root
+            else:
+                for filename in files:
+                    if filename.endswith('.xlsx') or filename.endswith('.xls'):
+                        excel_file = os.path.join(root, filename)
+                for dirname in dirs:
+                    if dirname == 'images':
+                        images_folder_path = os.path.join(root, dirname)
 
         if excel_file:
             # Переименуем Excel-файл и переместим его в нужную директорию
             new_excel_path = os.path.join(EXCEL_FOLDER, 'products.xlsx')
             shutil.move(excel_file, new_excel_path)
-
-            # Переместим картинки из папки images в files/images, только если они отсутствуют
-            if images_folder_path:
-                for image_file in os.listdir(images_folder_path):
-                    dest_path = os.path.join(IMAGES_FOLDER, image_file)
-                    if not os.path.exists(dest_path):  # Проверяем, существует ли файл
-                        shutil.move(os.path.join(images_folder_path, image_file), IMAGES_FOLDER)
-
+        
+        # Переместим картинки из папки images в files/images, только если они отсутствуют
+        if images_folder_path:
+            for image_file in os.listdir(images_folder_path):
+                dest_path = os.path.join(IMAGES_FOLDER, image_file)
+                if not os.path.exists(dest_path):  # Проверяем, существует ли файл
+                    shutil.move(os.path.join(images_folder_path, image_file), IMAGES_FOLDER)
+            
             # Удалим временные файлы и директории
             shutil.rmtree(EXTRACT_FOLDER)
             os.remove(zip_path)
-
             return jsonify({'message': 'File uploaded and processed successfully'}), 200
-        else:
-            return jsonify({'error': 'No Excel file found in the ZIP archive'}), 400
+
+        return jsonify({'message': 'Empty zip file'}), 201
     else:
         return jsonify({'error': 'Invalid file format. Please upload a ZIP file.'}), 400
 

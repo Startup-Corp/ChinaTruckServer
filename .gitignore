@@ -1,3 +1,5 @@
 files/*
 .venv
 .env
+build/*
+dist/*

@@ -21,8 +21,8 @@ class ZipUploaderApp:
             self.send_zip_to_server(file_path)
 
     def send_zip_to_server(self, file_path):
-        url = 'https://shunliservertruck.ddns.net:5000/upload'
-        # url = 'http://localhost:8000/upload'
+        # url = 'https://shunliservertruck.ddns.net:5000/upload'
+        url = 'http://localhost:8000/upload'
         files = {'file': open(file_path, 'rb')}
 
         try:
