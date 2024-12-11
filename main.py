@@ -101,7 +101,7 @@ def read_excel():
 
     # Замена символа '/' на ', ' в артикуле
     df['articul'] = df['articul'].apply(lambda x: x.replace('/', ', ') if isinstance(x, str) else x)
-    df['search_fields'] = df[['name', 'articul', 'Производитель', 'model']].apply(lambda x: ' '.join(x.dropna().astype(str)), axis=1)
+    df['search_fields'] = df[['articul', 'model', 'name']].apply(lambda x: ' '.join(x.dropna().astype(str)), axis=1)
 
     # Получение параметров пагинации и поиска из запроса
     page = int(request.args.get('page', 1))
