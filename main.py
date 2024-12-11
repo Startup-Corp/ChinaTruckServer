@@ -47,11 +47,14 @@ def serve_image(filename):
     directory_path = 'files/images'
     files = os.listdir(directory_path)
     files = [f for f in files if os.path.isfile(os.path.join(directory_path, f))]
-    matching_files = [f for f in files if filename in f]
+
+    # Ищем файлы, чьи имена начинаются с filename
+    matching_files = [f for f in files if f.startswith(filename)]
 
     if not matching_files:
         return send_from_directory(directory_path, "404.jpg")
 
+    # Возвращаем первый найденный файл
     return send_from_directory(directory_path, matching_files[0])
 
 @app.route('/read_excel', methods=['GET'])
@@ -202,7 +205,6 @@ def submit_order():
     except Exception as e:
         print(f"Ошибка при обработке заказа: {e}")
         return jsonify({"message": "Ошибка при отправке заказа"}), 500
-
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
